@@ -4,7 +4,12 @@ import { cookies } from "next/headers"
 const verifyAdminToken = (token?: string) => {
   return token === "Bearer admin-token"
 }
-
+const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  // Validation Block
+  if (!isUUID(params.id)) {
+    return Response.json({ error: "Invalid ID format" }, { status: 400 })
+  }
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const cookieStore = await cookies()

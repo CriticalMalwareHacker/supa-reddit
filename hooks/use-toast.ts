@@ -8,7 +8,7 @@ import type {
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = ToastProps &XH {
+type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
@@ -74,7 +74,7 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
-      returnXH {
+      return {
         ...state,
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
       }

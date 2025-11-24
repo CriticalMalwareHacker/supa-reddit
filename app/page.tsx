@@ -25,7 +25,7 @@ export default function Home() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch("/api/tasks/list")
+        const res = await fetch("/api/tasks")
         const data = await res.json()
         setTasks(data.tasks || [])
       } catch (error) {

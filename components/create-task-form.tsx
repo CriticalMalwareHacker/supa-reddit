@@ -29,7 +29,7 @@ export function CreateTaskForm({ onTaskCreated }: CreateTaskFormProps) {
     const deadline = formData.get("deadline") as string
 
     try {
-      const res = await fetch("/api/tasks/create", {
+      const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
