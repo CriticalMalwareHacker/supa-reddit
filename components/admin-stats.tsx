@@ -24,7 +24,9 @@ export function AdminStats({ refreshTrigger }: { refreshTrigger: number }) {
 
         if (error) throw error
 
-        const comments = data || []
+        // FIX: Explicitly type comments as any[] to avoid implicit 'any' errors
+        const comments: any[] = data || []
+        
         const liveCount = comments.filter((c) => c.status === "live").length
         const removedCount = comments.filter((c) => c.status === "removed").length
         const paidCount = comments.filter((c) => c.status === "paid").length
