@@ -34,7 +34,9 @@ export async function GET() {
 // POST Handler (Replaces api/tasks/create)
 export async function POST(request: Request) {
   const authHeader = request.headers.get("authorization")
-  if (!verifyAdminToken(authHeader)) {
+  
+  // FIX: Use '?? undefined' to convert null to undefined for the strict type check
+  if (!verifyAdminToken(authHeader ?? undefined)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 

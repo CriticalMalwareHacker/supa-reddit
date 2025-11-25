@@ -1,21 +1,13 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+// Helper for admin token verification (moved from create/route.ts)
 const verifyAdminToken = (token?: string) => {
   return token === "Bearer admin-token"
 }
 
-const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
-// Note: In Next.js 15+, params is a Promise
-export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params; // <--- KEY FIX: Await the params
-
-  // Validation Block
-  if (!params.id || !isUUID(params.id)) {
-    return Response.json({ error: "Invalid ID format" }, { status: 400 })
-  }
-
+// GET Handler (Replaces api/tasks/list)
+export async function GET() {
   try {
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -24,24 +16,31 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
       { cookies: { getAll: () => cookieStore.getAll() } },
     )
 
-    const { data, error } = await supabase.from("tasks").select("*").eq("id", params.id).single()
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    return Response.json({ task: data })
+    return Response.json({ tasks: data })
   } catch (error: any) {
-    console.error("[v0] Error fetching task:", error)
+    console.error("[v0] Error fetching tasks:", error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }
 
-export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params; // <--- KEY FIX: Await the params
-
+// POST Handler (Replaces api/tasks/create)
+export async function POST(request: Request) {
   const authHeader = request.headers.get("authorization")
-  if (!verifyAdminToken(authHeader)) {
+  // FIX: Add '?? undefined' to handle null
+  if (!verifyAdminToken(authHeader ?? undefined)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  // CHANGE: Added post_link to destructuring
+  const { title, description, subreddit, post_link, payment_amount, deadline } = await request.json()
 
   try {
     const cookieStore = await cookies()
@@ -49,13 +48,22 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
       cookies: { getAll: () => cookieStore.getAll() },
     })
 
-    const { error } = await supabase.from("tasks").delete().eq("id", params.id)
+    const { data, error } = await supabase.from("tasks").insert({
+      admin_id: "admin",
+      title,
+      description,
+      subreddit,
+      post_link, // CHANGE: Insert post_link
+      payment_amount,
+      deadline,
+      status: "active",
+    })
 
     if (error) throw error
 
-    return Response.json({ success: true })
+    return Response.json({ task: data })
   } catch (error: any) {
-    console.error("[v0] Error deleting task:", error)
+    console.error("[v0] Task creation error:", error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }

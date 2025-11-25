@@ -9,7 +9,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
   const params = await props.params;
 
   const authHeader = request.headers.get("authorization")
-  if (!verifyAdminToken(authHeader)) {
+  // FIX: Add '?? undefined' to handle null
+  if (!verifyAdminToken(authHeader ?? undefined)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 
