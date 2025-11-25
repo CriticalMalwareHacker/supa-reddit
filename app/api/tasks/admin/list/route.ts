@@ -7,7 +7,8 @@ const verifyAdminToken = (token?: string) => {
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization")
-  if (!verifyAdminToken(authHeader)) {
+  // FIX: Use '?? undefined' to convert null to undefined
+  if (!verifyAdminToken(authHeader ?? undefined)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 

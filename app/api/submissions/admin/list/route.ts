@@ -7,7 +7,7 @@ const verifyAdminToken = (token?: string) => {
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization")
-  // FIX: Add '?? undefined' to handle null
+  // FIX: Use '?? undefined' to convert null to undefined
   if (!verifyAdminToken(authHeader ?? undefined)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -18,17 +18,17 @@ export async function GET(request: Request) {
       cookies: { getAll: () => cookieStore.getAll() },
     })
 
+    // CHANGE: Fetch tasks(title) along with submissions
     const { data, error } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("admin_id", "admin")
+      .from("task_submissions")
+      .select("*, tasks(title)")
       .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    return Response.json({ tasks: data })
+    return Response.json({ submissions: data })
   } catch (error: any) {
-    console.error("[v0] Error fetching tasks:", error)
+    console.error("[v0] Error fetching submissions:", error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }
