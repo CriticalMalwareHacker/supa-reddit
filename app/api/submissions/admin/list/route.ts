@@ -17,9 +17,10 @@ export async function GET(request: Request) {
       cookies: { getAll: () => cookieStore.getAll() },
     })
 
+    // CHANGE: Fetch tasks(title) along with submissions
     const { data, error } = await supabase
       .from("task_submissions")
-      .select("*")
+      .select("*, tasks(title)")
       .order("created_at", { ascending: false })
 
     if (error) throw error

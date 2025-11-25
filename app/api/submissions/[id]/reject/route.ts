@@ -5,7 +5,9 @@ const verifyAdminToken = (token?: string) => {
   return token === "Bearer admin-token"
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+
   const authHeader = request.headers.get("authorization")
   if (!verifyAdminToken(authHeader)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })

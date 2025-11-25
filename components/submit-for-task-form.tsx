@@ -3,11 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
+import { CheckCircle2 } from "lucide-react"
 
 interface SubmitForTaskFormProps {
   taskId: string
@@ -16,15 +18,20 @@ interface SubmitForTaskFormProps {
 
 export function SubmitForTaskForm({ taskId, paymentAmount }: SubmitForTaskFormProps) {
   const [loading, setLoading] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("binance")
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
 
-    const formData = new FormData(e.currentTarget)
-    const user_email = formData.get("user_email") as string
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    
+    // CHANGE: Get discord_username instead of email
+    const discord_username = formData.get("discord_username") as string
     const reddit_comment_url = formData.get("reddit_comment_url") as string
     const payment_id = formData.get("payment_id") as string
 
@@ -34,15 +41,20 @@ export function SubmitForTaskForm({ taskId, paymentAmount }: SubmitForTaskFormPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           task_id: taskId,
-          user_email,
+          discord_username, // Send discord username
           reddit_comment_url,
           [paymentMethod === "binance" ? "binance_id" : "upi_id"]: payment_id,
         }),
       })
 
       if (res.ok) {
+        setIsSubmitted(true)
         toast({ description: "Submission created successfully! Admin will review it." })
-        e.currentTarget.reset()
+        form.reset()
+        
+        setTimeout(() => {
+          router.push("/")
+        }, 2000)
       } else {
         const data = await res.json()
         toast({ description: data.error || "Failed to submit", variant: "destructive" })
@@ -55,11 +67,24 @@ export function SubmitForTaskForm({ taskId, paymentAmount }: SubmitForTaskFormPr
     }
   }
 
+  if (isSubmitted) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in duration-500">
+        <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
+        <h3 className="text-2xl font-bold text-foreground">Submission Received!</h3>
+        <p className="text-muted-foreground mt-2">
+          Thank you for your submission. Redirecting you back to tasks...
+        </p>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="user_email">Your Email</Label>
-        <Input id="user_email" name="user_email" type="email" placeholder="your@email.com" required />
+        {/* CHANGE: Label and Input for Discord Username */}
+        <Label htmlFor="discord_username">Discord Username</Label>
+        <Input id="discord_username" name="discord_username" placeholder="username#1234" required />
       </div>
 
       <div className="space-y-2">

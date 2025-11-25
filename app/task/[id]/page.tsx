@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ExternalLink } from "lucide-react" // CHANGE: Import ExternalLink
 import { SubmitForTaskForm } from "@/components/submit-for-task-form"
 import { Spinner } from "@/components/ui/spinner"
 
@@ -15,6 +15,7 @@ interface Task {
   title: string
   description: string
   subreddit: string
+  post_link?: string // CHANGE: Add post_link to interface
   payment_amount: number
   deadline: string
   status: string
@@ -94,6 +95,20 @@ export default function TaskDetailPage() {
                   <p className="text-sm text-muted-foreground">Deadline</p>
                   <p className="font-medium">{new Date(task.deadline).toLocaleDateString()}</p>
                 </div>
+                
+                {/* CHANGE: Display clickable post link */}
+                {task.post_link && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Target Post</p>
+                    <a href={task.post_link} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open on Reddit
+                      </Button>
+                    </a>
+                  </div>
+                )}
+
                 <div>
                   <p className="text-sm text-muted-foreground">Description</p>
                   <p className="text-sm mt-2">{task.description}</p>

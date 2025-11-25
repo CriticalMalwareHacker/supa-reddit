@@ -2,9 +2,10 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
-  const { task_id, user_email, reddit_comment_url, binance_id, upi_id } = await request.json()
+  // CHANGE: Removed user_email, added discord_username
+  const { task_id, discord_username, reddit_comment_url, binance_id, upi_id } = await request.json()
 
-  if (!task_id || !user_email || !reddit_comment_url) {
+  if (!task_id || !discord_username || !reddit_comment_url) {
     return Response.json({ error: "Missing required fields" }, { status: 400 })
   }
 
@@ -16,9 +17,11 @@ export async function POST(request: Request) {
       { cookies: { getAll: () => cookieStore.getAll() } },
     )
 
+    // CHANGE: Insert discord_username instead of user_email
     const { data, error } = await supabase.from("task_submissions").insert({
       task_id,
-      user_email,
+      discord_username, 
+      user_email: "", // or null if you updated the schema
       reddit_comment_url,
       binance_id,
       upi_id,

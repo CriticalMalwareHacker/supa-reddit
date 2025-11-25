@@ -4,13 +4,18 @@ import { cookies } from "next/headers"
 const verifyAdminToken = (token?: string) => {
   return token === "Bearer admin-token"
 }
+
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+
+// Note: In Next.js 15+, params is a Promise
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params; // <--- KEY FIX: Await the params
+
   // Validation Block
-  if (!isUUID(params.id)) {
+  if (!params.id || !isUUID(params.id)) {
     return Response.json({ error: "Invalid ID format" }, { status: 400 })
   }
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+
   try {
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -30,7 +35,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params; // <--- KEY FIX: Await the params
+
   const authHeader = request.headers.get("authorization")
   if (!verifyAdminToken(authHeader)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })

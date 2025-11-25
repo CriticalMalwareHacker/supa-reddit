@@ -38,7 +38,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { title, description, subreddit, payment_amount, deadline } = await request.json()
+  // CHANGE: Added post_link to destructuring
+  const { title, description, subreddit, post_link, payment_amount, deadline } = await request.json()
 
   try {
     const cookieStore = await cookies()
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
       title,
       description,
       subreddit,
+      post_link, // CHANGE: Insert post_link
       payment_amount,
       deadline,
       status: "active",

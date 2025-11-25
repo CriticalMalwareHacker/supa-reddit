@@ -21,21 +21,30 @@ export function CreateTaskForm({ onTaskCreated }: CreateTaskFormProps) {
     e.preventDefault()
     setLoading(true)
 
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    
     const title = formData.get("title") as string
     const description = formData.get("description") as string
     const subreddit = formData.get("subreddit") as string
+    const post_link = formData.get("post_link") as string // CHANGE: Get post_link
     const payment_amount = Number.parseFloat(formData.get("payment_amount") as string)
     const deadline = formData.get("deadline") as string
 
     try {
+      const token = localStorage.getItem("adminToken")
+
       const res = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           title,
           description,
           subreddit,
+          post_link, // CHANGE: Send post_link
           payment_amount,
           deadline,
         }),
@@ -43,10 +52,11 @@ export function CreateTaskForm({ onTaskCreated }: CreateTaskFormProps) {
 
       if (res.ok) {
         toast({ description: "Task created successfully" })
-        e.currentTarget.reset()
+        form.reset()
         onTaskCreated()
       } else {
-        toast({ description: "Failed to create task", variant: "destructive" })
+        const data = await res.json()
+        toast({ description: data.error || "Failed to create task", variant: "destructive" })
       }
     } catch (error) {
       console.error("[v0] Error creating task:", error)
@@ -66,6 +76,12 @@ export function CreateTaskForm({ onTaskCreated }: CreateTaskFormProps) {
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" name="description" placeholder="What should users comment about?" required />
+      </div>
+
+      {/* CHANGE: Added Post Link Input */}
+      <div className="space-y-2">
+        <Label htmlFor="post_link">Reddit Post Link</Label>
+        <Input id="post_link" name="post_link" placeholder="https://reddit.com/r/subreddit/comments/..." required />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
