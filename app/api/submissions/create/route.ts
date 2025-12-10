@@ -2,7 +2,6 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
-  // CHANGE: Removed user_email, added discord_username
   const { task_id, discord_username, reddit_comment_url, binance_id, upi_id } = await request.json()
 
   if (!task_id || !discord_username || !reddit_comment_url) {
@@ -17,11 +16,18 @@ export async function POST(request: Request) {
       { cookies: { getAll: () => cookieStore.getAll() } },
     )
 
-    // CHANGE: Insert discord_username instead of user_email
+    // Get the current authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { data, error } = await supabase.from("task_submissions").insert({
       task_id,
+      user_id: user.id, // <--- Link submission to user
       discord_username, 
-      user_email: "", // or null if you updated the schema
+      user_email: user.email,
       reddit_comment_url,
       binance_id,
       upi_id,

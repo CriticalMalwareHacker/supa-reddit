@@ -5,34 +5,26 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LogOut } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 import { getSupabaseClient } from "@/lib/supabase-client"
-import { SubmitCommentForm } from "@/components/submit-comment-form"
-import { UserCommentsList } from "@/components/user-comments-list"
+import { UserTasksList } from "@/components/user-tasks-list"
+import { UserSubmissionsList } from "@/components/user-submissions-list"
 
 export default function UserDashboard() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
   const router = useRouter()
-  const { toast } = useToast()
   const supabase = getSupabaseClient()
 
   useEffect(() => {
     const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
         router.push("/auth/login")
         return
       }
-
-      setUser(session.user)
+      setUser(user)
       setLoading(false)
     }
-
     checkAuth()
   }, [supabase, router])
 
@@ -41,19 +33,15 @@ export default function UserDashboard() {
     router.push("/auth/login")
   }
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">My Comments</h1>
-            <p className="text-muted-foreground">Track your Reddit comments and payments</p>
-            <p className="text-sm text-muted-foreground mt-2">Email: {user?.email}</p>
+            <h1 className="text-3xl font-bold">User Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, {user?.email}</p>
           </div>
           <Button variant="outline" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />
@@ -61,19 +49,18 @@ export default function UserDashboard() {
           </Button>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="track" className="mt-8">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="submit">Submit Comment</TabsTrigger>
-            <TabsTrigger value="track">My Comments</TabsTrigger>
+        <Tabs defaultValue="available" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="available">Available Tasks</TabsTrigger>
+            <TabsTrigger value="submissions">My Submissions</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="submit" className="mt-6">
-            <SubmitCommentForm onCommentSubmitted={() => setRefreshTrigger((prev) => prev + 1)} />
+          <TabsContent value="available">
+            <UserTasksList />
           </TabsContent>
 
-          <TabsContent value="track" className="mt-6">
-            <UserCommentsList refreshTrigger={refreshTrigger} />
+          <TabsContent value="submissions">
+            <UserSubmissionsList refreshTrigger={0} />
           </TabsContent>
         </Tabs>
       </div>
